@@ -1,22 +1,22 @@
 'use strict';
 
-const Async = require('async');
-const Hapi = require('hapi');
-const Code = require('code');
-const Lab = require('lab');
-const Plugin = require('../');
+var Async = require('async');
+var Hapi = require('hapi');
+var Code = require('code');
+var Lab = require('lab');
+var Plugin = require('../');
 
-const expect = Code.expect;
-const lab = exports.lab = Lab.script();
-const beforeEach = lab.beforeEach;
-const describe = lab.describe;
-const it = lab.it;
+var expect = Code.expect;
+var lab = exports.lab = Lab.script();
+var beforeEach = lab.beforeEach;
+var describe = lab.describe;
+var it = lab.it;
 
-describe('registration and functionality', () => {
+describe('registration and functionality', function () {
 
-    let server;
+    var server;
 
-    beforeEach((done) => {
+    beforeEach(function (done) {
 
         server = new Hapi.Server();
         server.connection();
@@ -24,7 +24,7 @@ describe('registration and functionality', () => {
         server.route({
             method: 'get',
             path: '/queryTest',
-            handler: (request, reply) => {
+            handler: function (request, reply) {
 
                 return reply(request.query);
             }
@@ -33,7 +33,7 @@ describe('registration and functionality', () => {
         server.route({
             method: 'get',
             path: '/paramsTest/{a}/{b?}',
-            handler: (request, reply) => {
+            handler: function (request, reply) {
 
                 return reply(request.params);
             }
@@ -42,7 +42,7 @@ describe('registration and functionality', () => {
         server.route({
             method: 'post',
             path: '/payloadTest',
-            handler: (request, reply) => {
+            handler: function (request, reply) {
 
                 return reply(request.payload);
             }
@@ -51,27 +51,27 @@ describe('registration and functionality', () => {
         return done();
     });
 
-    const register = (options, next) => {
+    var register = function (options, next) {
 
         server.register({
             register: Plugin,
             options: options
-        }, (err) => {
+        }, function (err) {
 
             return next(err);
         });
     };
 
-    it('registers without options', (done) => {
+    it('registers without options', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply('');
                 }
@@ -80,7 +80,7 @@ describe('registration and functionality', () => {
             server.inject({
                 method: 'get',
                 url: '/'
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
                 expect(res.result).to.equal(null);
@@ -90,11 +90,11 @@ describe('registration and functionality', () => {
         });
     });
 
-    it('registers with error if invalid options', (done) => {
+    it('registers with error if invalid options', function (done) {
 
         register({
             some: 'value'
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.exist();
 
@@ -102,18 +102,18 @@ describe('registration and functionality', () => {
         });
     });
 
-    it('can be disabled per route', (done) => {
+    it('can be disabled per route', function (done) {
 
         register({
-            deleteEmpty: true
-        }, (err) => {
+            devareEmpty: true
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/disabled',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.query);
                 },
@@ -123,7 +123,7 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'post',
                 path: '/disabled',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.payload);
                 },
@@ -131,100 +131,100 @@ describe('registration and functionality', () => {
             });
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/disabled?a=&b=&c=c'
-                    }, (res) => {
+                    }, function (res)  {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: '', b: '', c: 'c' });
+                        expect(res.result).to.deep.equal({ a: '', b: '', c: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/disabled',
                         payload: { a: '', b: '', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: '', b: '', c: 'c' });
+                        expect(res.result).to.deep.equal({ a: '', b: '', c: 'c' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('removes empties', (done) => {
+    it('removes empties', function (done) {
 
         register({
-            deleteEmpty: true
-        }, (err) => {
+            devareEmpty: true
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTest?a=&b=&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTest',
                         payload: { a: '', b: '', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('removes empties on a per route config', (done) => {
+    it('removes empties on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/queryTestPerRoute',
-                handler: (request, reply) => {
+                handler: function(request, reply) {
 
                     return reply(request.query);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            deleteEmpty: true
+                            devareEmpty: true
                         }
                     }
                 }
@@ -233,127 +233,127 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'post',
                 path: '/payloadTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply)  {
 
                     return reply(request.payload);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            deleteEmpty: true
+                            devareEmpty: true
                         }
                     }
                 }
             });
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTestPerRoute?a=&b=&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTestPerRoute',
                         payload: { a: '', b: '', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('removes whitespaces', (done) => {
+    it('removes whitespaces', function (done) {
 
         register({
-            deleteWhitespace: true
-        }, (err) => {
+            devareWhitespace: true
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTest?a=%20%20%20&b=%20%20%20&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/paramsTest/' + encodeURIComponent('      ') + '/5'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ b: '5' });
+                        expect(res.result).to.deep.equal({ b: '5' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTest',
                         payload: { a: '      ', b: '       ', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('removes whitespaces on a per route config', (done) => {
+    it('removes whitespaces on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/queryTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.query);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            deleteWhitespace: true
+                            devareWhitespace: true
                         }
                     }
                 }
@@ -362,14 +362,14 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'get',
                 path: '/paramsTestPerRoute/{a}/{b?}',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.params);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            deleteWhitespace: true
+                            devareWhitespace: true
                         }
                     }
                 }
@@ -378,98 +378,98 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'post',
                 path: '/payloadTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.payload);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            deleteWhitespace: true
+                            devareWhitespace: true
                         }
                     }
                 }
             });
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTestPerRoute?a=%20%20%20&b=%20%20%20&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/paramsTestPerRoute/' + encodeURIComponent('      ') + '/c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ b: 'c' });
+                        expect(res.result).to.deep.equal({ b: 'c' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTestPerRoute',
                         payload: { a: '      ', b: '       ', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ c: 'c' });
+                        expect(res.result).to.deep.equal({ c: 'c' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('sanitizes query', (done) => {
+    it('sanitizes query', function (done) {
 
         register({
             disinfectQuery: true
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.inject({
                 method: 'get',
                 url: '/queryTest?a=' + encodeURIComponent('<b>hello <i>world</i><script src=foo.js></script></b>')
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('sanitizes query on a per route config', (done) => {
+    it('sanitizes query on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/queryTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.query);
                 },
@@ -485,47 +485,47 @@ describe('registration and functionality', () => {
             server.inject({
                 method: 'get',
                 url: '/queryTestPerRoute?a=' + encodeURIComponent('<b>hello <i>world</i><script src=foo.js></script></b>')
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('sanitizes params', (done) => {
+    it('sanitizes params', function (done) {
 
         register({
             disinfectParams: true
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.inject({
                 method: 'get',
                 url: '/paramsTest/' + encodeURIComponent('<b>hello <i>world</i><script src=foo.js></script></b>')
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('sanitizes params on a per route config', (done) => {
+    it('sanitizes params on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/paramsTestPerRoute/{a}/{b?}',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.params);
                 },
@@ -541,21 +541,21 @@ describe('registration and functionality', () => {
             server.inject({
                 method: 'get',
                 url: '/paramsTestPerRoute/' + encodeURIComponent('<b>hello <i>world</i><script src=foo.js></script></b>')
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('sanitizes payload', (done) => {
+    it('sanitizes payload', function (done) {
 
         register({
             disinfectPayload: true
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
@@ -563,26 +563,26 @@ describe('registration and functionality', () => {
                 method: 'post',
                 url: '/payloadTest',
                 payload: { a: '<b>hello <i>world</i><script src=foo.js></script></b>' }
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('sanitizes payload on a per route config', (done) => {
+    it('sanitizes payload on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'post',
                 path: '/payloadTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.payload);
                 },
@@ -599,102 +599,102 @@ describe('registration and functionality', () => {
                 method: 'post',
                 url: '/payloadTestPerRoute',
                 payload: { a: '<b>hello <i>world</i><script src=foo.js></script></b>' }
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: '<b>hello <i>world</i></b>' });
+                expect(res.result).to.deep.equal({ a: '<b>hello <i>world</i></b>' });
 
                 return done();
             });
         });
     });
 
-    it('accepts custom generic sanitizer', (done) => {
+    it('accepts custom generic sanitizer', function (done) {
 
         register({
-            genericSanitizer: (obj) => {
+            genericSanitizer: function (obj) {
 
-                const keys = Object.keys(obj);
+                var keys = Object.keys(obj);
 
-                for (let i = 0; i < keys.length; ++i) {
+                for (var i = 0; i < keys.length; ++i) {
                     obj[keys[i]] = obj[keys[i]] + 'x';
                 }
 
                 return obj;
             }
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTest?a=a&b=b&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'ax', b: 'bx', c: 'cx' });
+                        expect(res.result).to.deep.equal({ a: 'ax', b: 'bx', c: 'cx' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/paramsTest/a/b'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'ax', b: 'bx' });
+                        expect(res.result).to.deep.equal({ a: 'ax', b: 'bx' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTest',
                         payload: { a: 'a', b: 'b', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'ax', b: 'bx', c: 'cx' });
+                        expect(res.result).to.deep.equal({ a: 'ax', b: 'bx', c: 'cx' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('accepts generic sanitizer on a per route config', (done) => {
+    it('accepts generic sanitizer on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/queryTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.query);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            genericSanitizer: (obj) => {
+                            genericSanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + '1';
                                 }
 
@@ -708,18 +708,18 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'get',
                 path: '/paramsTestPerRoute/{a}/{b?}',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.params);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            genericSanitizer: (obj) => {
+                            genericSanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + '2';
                                 }
 
@@ -733,18 +733,18 @@ describe('registration and functionality', () => {
             server.route({
                 method: 'post',
                 path: '/payloadTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.payload);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            genericSanitizer: (obj) => {
+                            genericSanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + '3';
                                 }
 
@@ -756,104 +756,104 @@ describe('registration and functionality', () => {
             });
 
             Async.series([
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/queryTestPerRoute?a=a&b=b&c=c'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'a1', b: 'b1', c: 'c1' });
+                        expect(res.result).to.deep.equal({ a: 'a1', b: 'b1', c: 'c1' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'get',
                         url: '/paramsTestPerRoute/a/b'
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'a2', b: 'b2' });
+                        expect(res.result).to.deep.equal({ a: 'a2', b: 'b2' });
 
                         return doneTest();
                     });
                 },
-                (doneTest) => {
+                function (doneTest) {
 
                     server.inject({
                         method: 'post',
                         url: '/payloadTestPerRoute',
                         payload: { a: 'a', b: 'b', c: 'c' }
-                    }, (res) => {
+                    }, function (res) {
 
                         expect(res.statusCode).to.be.equal(200);
-                        expect(res.result).to.equal({ a: 'a3', b: 'b3', c: 'c3' });
+                        expect(res.result).to.deep.equal({ a: 'a3', b: 'b3', c: 'c3' });
 
                         return doneTest();
                     });
                 }
-            ], () => {
+            ], function () {
 
                 return done();
             });
         });
     });
 
-    it('accepts query sanitizer', (done) => {
+    it('accepts query sanitizer', function (done) {
 
         register({
-            querySanitizer: (obj) => {
+            querySanitizer: function (obj) {
 
-                const keys = Object.keys(obj);
+                var keys = Object.keys(obj);
 
-                for (let i = 0; i < keys.length; ++i) {
+                for (var i = 0; i < keys.length; ++i) {
                     obj[keys[i]] = obj[keys[i]] + 'q';
                 }
 
                 return obj;
             }
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.inject({
                 method: 'get',
                 url: '/queryTest?a=a&b=b&c=c'
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'aq', b: 'bq', c: 'cq' });
+                expect(res.result).to.deep.equal({ a: 'aq', b: 'bq', c: 'cq' });
 
                 return done();
             });
         });
     });
 
-    it('accepts query sanitizer on a per route config', (done) => {
+    it('accepts query sanitizer on a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/queryTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.query);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            querySanitizer: (obj) => {
+                            querySanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + 'q1';
                                 }
 
@@ -867,72 +867,72 @@ describe('registration and functionality', () => {
             server.inject({
                 method: 'get',
                 url: '/queryTestPerRoute?a=a&b=b&c=c'
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'aq1', b: 'bq1', c: 'cq1' });
+                expect(res.result).to.deep.equal({ a: 'aq1', b: 'bq1', c: 'cq1' });
 
                 return done();
             });
         });
     });
 
-    it('accepts params sanitizer', (done) => {
+    it('accepts params sanitizer', function (done) {
 
         register({
-            paramsSanitizer: (obj) => {
+            paramsSanitizer: function (obj) {
 
-                const keys = Object.keys(obj);
+                var keys = Object.keys(obj);
 
-                for (let i = 0; i < keys.length; ++i) {
+                for (var i = 0; i < keys.length; ++i) {
                     obj[keys[i]] = obj[keys[i]] + 'm';
                 }
 
                 return obj;
             }
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.inject({
                 method: 'get',
                 url: '/paramsTest/a/b'
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'am', b: 'bm' });
+                expect(res.result).to.deep.equal({ a: 'am', b: 'bm' });
 
                 return done();
             });
         });
     });
 
-    it('accepts params sanitizer on a per route config', (done) => {
+    it('accepts params sanitizer on a per route config', function (done) {
 
         register({
-            paramsSanitizer: (obj) => {
+            paramsSanitizer: function (obj) {
 
                 return obj;
             }
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'get',
                 path: '/paramsTestPerRoute/{a}/{b?}',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.params);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            paramsSanitizer: (obj) => {
+                            paramsSanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + 'm1';
                                 }
 
@@ -946,30 +946,30 @@ describe('registration and functionality', () => {
             server.inject({
                 method: 'get',
                 url: '/paramsTestPerRoute/a/b'
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'am1', b: 'bm1' });
+                expect(res.result).to.deep.equal({ a: 'am1', b: 'bm1' });
 
                 return done();
             });
         });
     });
 
-    it('accepts payload sanitizer', (done) => {
+    it('accepts payload sanitizer', function (done) {
 
         register({
-            payloadSanitizer: (obj) => {
+            payloadSanitizer: function (obj) {
 
-                const keys = Object.keys(obj);
+                var keys = Object.keys(obj);
 
-                for (let i = 0; i < keys.length; ++i) {
+                for (var i = 0; i < keys.length; ++i) {
                     obj[keys[i]] = obj[keys[i]] + 'p';
                 }
 
                 return obj;
             }
-        }, (err) => {
+        }, function (err) {
 
             expect(err).to.not.exist();
 
@@ -977,37 +977,37 @@ describe('registration and functionality', () => {
                 method: 'post',
                 url: '/payloadTest',
                 payload: { a: 'a', b: 'b', c: 'c' }
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'ap', b: 'bp', c: 'cp' });
+                expect(res.result).to.deep.equal({ a: 'ap', b: 'bp', c: 'cp' });
 
                 return done();
             });
         });
     });
 
-    it('accepts payload sanitizer a per route config', (done) => {
+    it('accepts payload sanitizer a per route config', function (done) {
 
-        register({}, (err) => {
+        register({}, function (err) {
 
             expect(err).to.not.exist();
 
             server.route({
                 method: 'post',
                 path: '/payloadTestPerRoute',
-                handler: (request, reply) => {
+                handler: function (request, reply) {
 
                     return reply(request.payload);
                 },
                 config: {
                     plugins: {
                         disinfect: {
-                            payloadSanitizer: (obj) => {
+                            payloadSanitizer: function (obj) {
 
-                                const keys = Object.keys(obj);
+                                var keys = Object.keys(obj);
 
-                                for (let i = 0; i < keys.length; ++i) {
+                                for (var i = 0; i < keys.length; ++i) {
                                     obj[keys[i]] = obj[keys[i]] + 'p1';
                                 }
 
@@ -1022,10 +1022,10 @@ describe('registration and functionality', () => {
                 method: 'post',
                 url: '/payloadTestPerRoute',
                 payload: { a: 'a', b: 'b', c: 'c' }
-            }, (res) => {
+            }, function (res) {
 
                 expect(res.statusCode).to.be.equal(200);
-                expect(res.result).to.equal({ a: 'ap1', b: 'bp1', c: 'cp1' });
+                expect(res.result).to.deep.equal({ a: 'ap1', b: 'bp1', c: 'cp1' });
 
                 return done();
             });
